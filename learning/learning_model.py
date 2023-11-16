@@ -1,8 +1,10 @@
 import json
 import logging
 import os
+import re
 import sys
 
+from utils.file_utils import encode_image, load_txt_file
 from utils.time_utils import now
 
 
@@ -40,6 +42,45 @@ class LearningModel:
 
         self.logger = self.build_logger()
 
+        self.prompt = self.config["initial_prompt"]
+        self.log(f"initializing prompt to `{self.prompt}`")
+
+    def pre_processing(self):
+        # load problem images into encoded images
+        solution_files = os.listdir(self.solutions_path)
+        problem_statement_files = os.listdir(self.problem_statements_path)
+
+        # verify solution and problem filenames are correct
+        assert len(solution_files) == len(problem_statement_files), "difference between number of solutions"
+        for fn in solution_files:
+            assert re.match(r"^solution[0-9]+\..*", fn), f"invalid solution file name {fn}"
+        for fn in problem_statement_files:
+            assert re.match(r"^problem[0-9]+\..*", fn), f"invalid problem file name {fn}"
+
+        # sort by problem number in filename
+        solution_files.sort(
+            key=lambda fn: int(fn[8:].split(".")[0])
+        )
+        problem_statement_files.sort(
+            key=lambda fn: int(fn[7:].split(".")[0])
+        )
+
+        self.problem_statements = []
+        self.solutions = []
+        for problem_statement_fn, solution_fn in zip(problem_statement_files, solution_files):
+            # Construct the full file path
+            problem_statement_path = os.path.join(self.problem_statements_path, problem_statement_fn)
+            solution_path = os.path.join(self.solutions_path, solution_fn)
+
+            # TODO: make more general to handle
+            self.problem_statements.append(encode_image(problem_statement_path))
+            self.solutions.append(load_txt_file(solution_path))
+
+        self.log(f"loaded {len(self.solutions)} training problem(s)")
+
+    def do_training(self):
+        pass
+
     def get_logfilepath(self):
         """
         get the log path (under the software path)
@@ -50,10 +91,11 @@ class LearningModel:
         """
         start_time = now()
         filepath = os.path.dirname(__file__)
-        # root = "/".join(filepath.split("/")[:-1])
         root = os.path.dirname(filepath)
-        # directory = root + "/WareHouse/"
         directory = os.path.join(root, "Workspace")
+        directory = os.path.join(directory, self.solution_version)
+        directory = os.path.join(directory, "logs")
+        os.makedirs(directory, exist_ok=True)
         log_filepath = os.path.join(directory,
                                     "{}.log".format("_".join([self.problem_name, self.solution_version, start_time])))
         return start_time, log_filepath

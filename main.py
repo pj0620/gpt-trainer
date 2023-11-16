@@ -24,6 +24,14 @@ learning_model = LearningModel(
     solution_version=args.version,
     model_type=args.model
 )
-
-
 learning_model.log("loaded config and created LearningModel instance")
+
+# ----------------------------------------
+#          Pre Processing
+# ----------------------------------------
+learning_model.pre_processing()
+
+# ----------------------------------------
+#          start training
+# ----------------------------------------
+learning_model.do_training()

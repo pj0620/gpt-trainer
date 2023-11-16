@@ -1,4 +1,4 @@
-import os
+import base64
 import os
 import sys
 
@@ -38,3 +38,15 @@ def get_config(problem_name):
             config_paths.append(default_config_path)
 
     return tuple(config_paths)
+
+
+# Function to encode the image
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
+
+def load_txt_file(txt_file_path):
+    contents = None
+    with open(txt_file_path, 'r', encoding='utf-8') as file:
+        contents = file.read()
+    return contents
