@@ -4,11 +4,14 @@ import os
 import re
 import sys
 
-from utils.file_utils import encode_image, load_txt_file
+from constants.openai_constants import OPEN_AI_KEY_ENV_VAR
+from chat.chat import Chat
+from utils.file_utils import encode_image, load_txt_file, join_json_string
 from utils.time_utils import now
+from sklearn.model_selection import train_test_split
 
 
-class LearningModel:
+class GPTModel:
 
     def __init__(self,
                  problem_config_path: str = None,
@@ -16,7 +19,9 @@ class LearningModel:
                  solutions_path: str = None,
                  problem_name: str = None,
                  solution_version: str = "v1.0.0",
-                 model_type: str = "gpt-4-vision-preview") -> None:
+                 gpt_model: str = "gpt-4-vision-preview",
+                 evaluator_model: str = "gpt-3.5-turbo",
+                 train_test_split: float = 0.8) -> None:
         """
 
         Args:
@@ -24,16 +29,21 @@ class LearningModel:
             problem_statements_path: path to input problem statement images
             solutions_path: path to solutions
             problem_name: name of problem being solved
-            model_type: gpt model type
+            gpt_model: gpt model type
         """
-
-        # load config file
         self.problem_config_path = problem_config_path
         self.problem_statements_path = problem_statements_path
         self.solutions_path = solutions_path
         self.problem_name = problem_name
         self.solution_version = solution_version
-        self.model_type = model_type
+        self.gpt_model = gpt_model
+        self.evaluator_model = evaluator_model
+        self.train_test_split = train_test_split
+
+        self.openai_key = openai_key = os.environ[OPEN_AI_KEY_ENV_VAR]
+
+        if openai_key is None:
+            raise Exception(f"{OPEN_AI_KEY_ENV_VAR} is not set!")
 
         with open(self.problem_config_path, 'r', encoding="utf8") as file:
             self.config = json.load(file)
@@ -42,8 +52,14 @@ class LearningModel:
 
         self.logger = self.build_logger()
 
-        self.prompt = self.config["initial_prompt"]
-        self.log(f"initializing prompt to `{self.prompt}`")
+        self.initial_gpt_prompt = join_json_string(self.config["initial_gpt_prompt"])
+        self.gpt_prompt = self.initial_gpt_prompt[:]
+        self.log(f"initializing prompt to `{self.gpt_prompt}`")
+
+        self.problem_statements = []
+        self.solutions = []
+
+        self.inputs_train, self.inputs_test, self.outputs_train, self.outputs_test = (None, None, None, None)
 
     def pre_processing(self):
         # load problem images into encoded images
@@ -65,8 +81,6 @@ class LearningModel:
             key=lambda fn: int(fn[7:].split(".")[0])
         )
 
-        self.problem_statements = []
-        self.solutions = []
         for problem_statement_fn, solution_fn in zip(problem_statement_files, solution_files):
             # Construct the full file path
             problem_statement_path = os.path.join(self.problem_statements_path, problem_statement_fn)
@@ -78,8 +92,14 @@ class LearningModel:
 
         self.log(f"loaded {len(self.solutions)} training problem(s)")
 
+        self.inputs_train, self.inputs_test, self.outputs_train, self.outputs_test = train_test_split(
+            self.problem_statements, self.solutions, test_size=1 - self.train_test_split)
+
     def do_training(self):
-        pass
+        local_gpt = Chat(self.gpt_prompt, self.gpt_model)
+        local_gpt.get_response(
+            text_prompt="Please state your role"
+        )
 
     def get_logfilepath(self):
         """

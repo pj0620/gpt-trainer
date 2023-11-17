@@ -1,6 +1,6 @@
 import argparse
 
-from learning.learning_model import LearningModel
+from learning.gpt_model import GPTModel
 from utils.file_utils import get_config
 
 parser = argparse.ArgumentParser(description='argparse')
@@ -8,21 +8,27 @@ parser.add_argument('--problem', type=str, default="PhotoCircuit",
                     help="Name of problem gpt should solve defined in Problems/")
 parser.add_argument('--version', type=str, default="v1.0.0",
                     help="Version of solution to the problem")
-parser.add_argument('--model', type=str, default="gpt-4-vision-preview",
+parser.add_argument('--gpt-model', type=str, default="gpt-4-vision-preview",
                     help="GPT Model")
+parser.add_argument('--evaluator-model', type=str, default="gpt-3.5-turbo",
+                    help="Evaluator Model")
+parser.add_argument('--train-test-split', type=float, default=0.8,
+                    help="Percent of data to use for training, rest is used for testing(between 0.0 and 1.0)")
 args = parser.parse_args()
 
 # ----------------------------------------
 #          Init Learning Model
 # ----------------------------------------
 problem_config_path, problem_statements_path, solutions_path = get_config(args.problem)
-learning_model = LearningModel(
+learning_model = GPTModel(
     problem_config_path=problem_config_path,
     problem_statements_path=problem_statements_path,
     solutions_path=solutions_path,
     problem_name=args.problem,
     solution_version=args.version,
-    model_type=args.model
+    gpt_model=args.gpt_model,
+    evaluator_model=args.evaluator_model,
+    train_test_split=args.train_test_split
 )
 learning_model.log("loaded config and created LearningModel instance")
 

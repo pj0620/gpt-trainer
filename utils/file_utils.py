@@ -41,12 +41,20 @@ def get_config(problem_name):
 
 
 # Function to encode the image
-def encode_image(image_path):
+def encode_image(image_path: str) -> str:
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
+
 
 def load_txt_file(txt_file_path):
     contents = None
     with open(txt_file_path, 'r', encoding='utf-8') as file:
         contents = file.read()
     return contents
+
+
+def join_json_string(inp) -> str:
+    if isinstance(inp, list):
+        return '\n'.join(inp)
+    else:
+        return str(inp)
