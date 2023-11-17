@@ -21,7 +21,7 @@ class GPTModel:
                  solution_version: str = "v1.0.0",
                  gpt_model: str = "gpt-4-vision-preview",
                  evaluator_model: str = "gpt-3.5-turbo",
-                 train_test_split: float = 0.8) -> None:
+                 test_size: float = 0.2) -> None:
         """
 
         Args:
@@ -38,7 +38,7 @@ class GPTModel:
         self.solution_version = solution_version
         self.gpt_model = gpt_model
         self.evaluator_model = evaluator_model
-        self.train_test_split = train_test_split
+        self.test_size = test_size
 
         self.openai_key = openai_key = os.environ[OPEN_AI_KEY_ENV_VAR]
 
@@ -56,10 +56,10 @@ class GPTModel:
         self.gpt_prompt = self.initial_gpt_prompt[:]
         self.log(f"initializing prompt to `{self.gpt_prompt}`")
 
-        self.problem_statements = []
-        self.solutions = []
+        self.X = []
+        self.y = []
 
-        self.inputs_train, self.inputs_test, self.outputs_train, self.outputs_test = (None, None, None, None)
+        self.X_train, self.X_test, self.y_train, self.y_test = (None, None, None, None)
 
     def pre_processing(self):
         # load problem images into encoded images
@@ -86,20 +86,27 @@ class GPTModel:
             problem_statement_path = os.path.join(self.problem_statements_path, problem_statement_fn)
             solution_path = os.path.join(self.solutions_path, solution_fn)
 
-            # TODO: make more general to handle
-            self.problem_statements.append(encode_image(problem_statement_path))
-            self.solutions.append(load_txt_file(solution_path))
+            # TODO: make more general to handle text/image/etc
+            self.X.append(encode_image(problem_statement_path))
+            self.y.append(load_txt_file(solution_path))
 
-        self.log(f"loaded {len(self.solutions)} training problem(s)")
+        self.log(f"loaded {len(self.y)} training problem(s)")
 
-        self.inputs_train, self.inputs_test, self.outputs_train, self.outputs_test = train_test_split(
-            self.problem_statements, self.solutions, test_size=1 - self.train_test_split)
+        if len(self.X) > 1 / self.test_size:
+            self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+                self.X, self.y, test_size=self.test_size)
+        else:
+            self.X_train, self.y_train = self.X, self.y
+            self.X_test, self.y_test = [], []
+
+        self.log(f"split into test size: {len(self.X_test)}, train size: {len(self.X_train)}")
 
     def do_training(self):
-        local_gpt = Chat(self.gpt_prompt, self.gpt_model)
-        local_gpt.get_response(
-            text_prompt="Please state your role"
-        )
+        pass
+        # local_gpt = Chat(self.gpt_prompt, self.gpt_model)
+        # local_gpt.get_response(
+        #     text_prompt="Please state your role"
+        # )
 
     def get_logfilepath(self):
         """
