@@ -5,7 +5,7 @@ import re
 import sys
 
 from constants.openai_constants import OPEN_AI_KEY_ENV_VAR
-from chat.chat import Chat
+from chat.chat_agent import ChatAgent, EvaluatorAgent
 from utils.file_utils import encode_image, load_txt_file, join_json_string
 from utils.time_utils import now
 from sklearn.model_selection import train_test_split
@@ -52,14 +52,26 @@ class GPTModel:
 
         self.logger = self.build_logger()
 
-        self.initial_gpt_prompt = join_json_string(self.config["initial_gpt_prompt"])
-        self.gpt_prompt = self.initial_gpt_prompt[:]
-        self.log(f"initializing prompt to `{self.gpt_prompt}`")
-
         self.X = []
         self.y = []
 
         self.X_train, self.X_test, self.y_train, self.y_test = (None, None, None, None)
+
+        # setup gpt agents
+        self.initial_gpt_prompt = join_json_string(self.config["initial_gpt_prompt"])
+        self.gpt_prompt = self.initial_gpt_prompt[:]
+        self.log(f"initializing prompt to `{self.gpt_prompt}`")
+        gpt_tokens = self.config["gpt_completion_tokens"]
+        if gpt_tokens is None:
+            gpt_tokens = 500
+        self.local_gpt = ChatAgent(self.gpt_prompt, self.gpt_model, gpt_tokens)
+
+        self.evaluator_prompt = join_json_string(self.config["evaluator_prompt"])
+        self.log(f"initializing evaluator prompt to `{self.evaluator_prompt}`")
+        evaluator_tokens = self.config["evaluator_tokens"]
+        if evaluator_tokens is None:
+            evaluator_tokens = 500
+        self.evaluator_gpt = EvaluatorAgent(self.evaluator_prompt, self.evaluator_model, evaluator_tokens)
 
     def pre_processing(self):
         # load problem images into encoded images
@@ -102,11 +114,25 @@ class GPTModel:
         self.log(f"split into test size: {len(self.X_test)}, train size: {len(self.X_train)}")
 
     def do_training(self):
-        pass
-        # local_gpt = Chat(self.gpt_prompt, self.gpt_model)
-        # local_gpt.get_response(
-        #     text_prompt="Please state your role"
-        # )
+        idxes = range(len(self.X_train))
+        for i, Xt, yt in zip(idxes, self.X_train, self.y_train):
+            self.log(f"running training example {i}")
+
+            gpt_solution = self.local_gpt.get_response(
+               encoded_image=Xt
+            )
+            self.log(f"{gpt_solution=}")
+
+            evaluation_solution = self.evaluator_gpt.rank_solution(
+                gpt_prompt=self.initial_gpt_prompt,
+                gpt_solution=gpt_solution,
+                correct_solution=yt,
+                encoded_image=Xt
+            )
+            self.log(f"{evaluation_solution=}")
+
+
+
 
     def get_logfilepath(self):
         """
