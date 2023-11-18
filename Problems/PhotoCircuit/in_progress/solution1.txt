@@ -1,0 +1,126 @@
+The following is a list of properties of the circuit
+
+# Component List
+• 8Ω resistor
+• -j2Ω capacitor
+• j4Ω inductor
+• 6Ω resistor
+• 50∠30°V voltage source
+• 10∠0°A current source
+
+# Loops
+There are 3 total loops.
+
+Loop 1: left-most loop; consists of 8Ω resistor, -j2Ω capacitor, j4Ω inductor
+Loop 2: bottom-right loop; consists of j4Ω inductor, 6Ω resistor, 50∠30°V voltage source
+Loop 3: top loop; consists of 10∠0°A current source, 6Ω resistor
+
+# Nodes
+There are 4 total nodes
+Node 1: bottom; connected to bottom of 8Ω resistor, bottom of j4Ω inductor, negative terminal of 50∠30°V voltage source
+Node 2: middle-left; connected to top of 8Ω resistor, left of -j2Ω capacitor
+Node 3: center; connected to right of -j2Ω capacitor, top of j4Ω inductor, left 6Ω resistor, outlet of 10∠0°A current source
+Node 4: right-top; connected to inlet of 10∠0°A current source, right of 6Ω resistor, top of 50∠30°V voltage source
+
+# Building the Matrix using KVL
+
+I will use KVL analysis instead of the other option KCL. Note that the current in the kth loop will be set to Ik, so the loop current of Loop 1 is I1.
+
+Loop 1: 8 * I1 + -j2 * I1 + j4 * (I1 - I2) = 0
+Loop 2: j4 * (I2 - I1) + 6 * (I2 - 10∠0°) + 50∠30° = 0
+Loop 3: Part of Supermesh, no equation
+
+we can rearrange these equations to better convert to a linear algebra problem. I will not be simplifying or combining any phasor values.
+
+(8 + j2) * I1 + (-j4) * I2 = 0
+(  - j4) * I1 + ( 6 + j4) * I2 = 6 * 10∠0° - 50∠30°
+
+These can be combined into final linear algebra problem. Note that the angle symbol(∠) is replaced with the latex equivalent(\angle) and the degree symbol(°) is replaced with latex equivalent(^\circ)
+
+\begin{bmatrix}
+8 + j2 & - j4 \\
+  - j4 & 6 + j4
+\end{bmatrix}
+\begin{bmatrix}
+I_1 \\
+I_2
+\end{bmatrix}
+=
+\begin{bmatrix}
+0 \\
+6 * 10\angle0^\circ - 50\angle30^\circ
+\end{bmatrix}
+
+<SOLUTION method="KVL">
+\begin{bmatrix}
+I_1 \\
+I_2
+\end{bmatrix}
+=
+\begin{bmatrix}
+8 + j2 & - j4 \\
+  - j4 & 6 + j4
+\end{bmatrix}^{-1}
+\begin{bmatrix}
+0 \\
+6 * 10\angle0^\circ - 50\angle30^\circ
+\end{bmatrix}
+</SOLUTION>
+
+# Building the Matrix
+
+I will use KVL analysis instead of the other option KCL. Note that the voltsge in the kth node will be set to Vk, so the voltage of Node 1 is V1.
+
+Since there is no ground node, I am going to choose Node 1 to be ground. Thus V1 = 0V.
+
+Also, since Node 4 is connected Node 1, they can be combined into a supernode, and thus a new equation V4 = V0 + 50∠30° = 50∠30° V
+
+Node 1 & 4 Supernode: (V2 - 0) / 8 + (V3 - 0) / j4 + (V3 - 50∠30°) / 6 - 10∠0° = 0
+Node 2: - (V2 - 0) / 8 + (V3 - V2) / (-j2) = 0
+Node 3: - (V3 - V2) / (-j2) - (V3 - 0) / j4 + (50∠30° - V3) / 6 + 10∠0° = 0
+
+# Creating linear algebra problem
+
+Let's rearrange these equations into a linear algebra problem.
+
+For the supernode equation (Node 1 & 4 combined), we have:
+(V2 / 8) + (V3 / j4) + (V3 / 6) - (50∠30° / 6) = 10∠0°
+
+Expanding and combining terms gives us:
+
+(1/8)V2 + (1/j4 + 1/6)V3 = 10∠0° + (50∠30° / 6)
+
+For Node 2, we have:
+
+-(V2 / 8) + (V3 - V2) / (-j2) = 0
+
+Simplifying and combining like terms:
+
+(-1/8 + 1/-j2)V2 + (1/-j2)V3 = 0
+
+For Node 3, we have:
+
+(V2 / -j2) - (V3 / -j2) - (V3 / j4) + (50∠30° / 6) = 10∠0° + (V3 / 6)
+
+Rearranging the terms:
+
+(V2 / -j2) + (-1/-j2 - 1/j4 - 1/6)V3 = 10∠0° - (50∠30° / 6)
+
+This can then be combined into our final matrix
+
+<SOLUTION method="KCL">
+\begin{bmatrix}
+V_2 \\
+V_3
+\end{bmatrix}
+=
+\begin{bmatrix}
+1/8        & 1/6 + 1/j4 \\
+1/8 - 1/j2 & -1/j2
+-1/j2      & -1/j2
+\end{bmatrix}^{-1}
+\begin{bmatrix}
+0 \\
+6 * 10\angle0^\circ - 50\angle30^\circ
+\end{bmatrix}
+</SOLUTION>

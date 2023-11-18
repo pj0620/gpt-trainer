@@ -1,0 +1,57 @@
+The following is a list of properties of the circuit
+
+# Component List
+• 8Ω resistor
+• -j2Ω capacitor
+• j4Ω inductor
+• 6Ω resistor
+• 50∠30°V voltage source
+• 10∠0°A current source
+
+# Nodes
+There are 4 total nodes
+Node 1: bottom; connected to bottom of 8Ω resistor, bottom of j4Ω inductor, negative terminal of 50∠30°V voltage source
+Node 2: middle-left; connected to top of 8Ω resistor, left of -j2Ω capacitor
+Node 3: center; connected to right of -j2Ω capacitor, top of j4Ω inductor, left 6Ω resistor, outlet of 10∠0°A current source
+Node 4: right-top; connected to inlet of 10∠0°A current source, right of 6Ω resistor, top of 50∠30°V voltage source
+
+# Building the Matrix using Modified Nodal Analysis
+
+To solve using Modified Nodal Analysis, we will need to build the following linear algebra problem.
+
+A x = z
+
+where A, x, and z are defined as below
+
+The A matrix:
+is (n+m)x(n+m) in size, and consists only of known quantities.
+the nxn part of the matrix in the upper left:
+has only passive elements
+elements connected to ground appear only on the diagonal
+elements not connected to ground are both on the diagonal and off-diagonal terms.
+the rest of the A matrix (not included in the nxn upper left part) contains only 1, -1 and 0 (other values are possible if there are dependent current and voltage sources; I have not considered these cases.  Consult Litovski if interested.)
+The x matrix:
+is an (n+m)x1 vector that holds the unknown quantities (node voltages and the currents through the independent voltage sources).
+the top n elements are the n node voltages.
+the bottom m elements represent the currents through the m independent voltage sources in the circuit.
+The z matrix:
+is an (n+m)x1 vector that holds only known quantities
+the top n elements are either zero or the sum and difference of independent current sources in the circuit.
+the bottom m elements represent the m independent voltage sources in the circuit.
+
+<SOLUTION>
+\begin{bmatrix}
+V_2 \\
+V_3
+\end{bmatrix}
+=
+\begin{bmatrix}
+1/8        & 1/6 + 1/j4 \\
+1/8 - 1/j2 & -1/j2
+-1/j2      & -1/j2
+\end{bmatrix}^{-1}
+\begin{bmatrix}
+0 \\
+6 * 10\angle0^\circ - 50\angle30^\circ
+\end{bmatrix}
+</SOLUTION>
