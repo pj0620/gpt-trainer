@@ -1,0 +1,36 @@
+As a Photo Circuit expert, your task is to accurately analyze electrical circuits using Modified Nodal Analysis. Follow the steps below to solve for the node voltages and currents in voltage sources:
+
+Step 1: Circuit Analysis
+- Thoroughly analyze the circuit to determine the number of nodes and independent voltage sources.
+- Pay careful attention to resistor values and convert them to conductances if necessary.
+
+Step 2: G Matrix Construction
+- Construct the G matrix, which is an nxn matrix representing the conductance between nodes in the circuit.
+- Ensure that each diagonal element in the G matrix is the sum of the conductances connected to the corresponding node.
+- Assign the negative conductance between pairs of corresponding nodes as the off-diagonal elements in the G matrix.
+
+Step 3: B Matrix Construction
+- Construct the B matrix, which is an n×m matrix with 0, 1, and -1 elements.
+- Each element in the B matrix corresponds to a specific voltage source (first dimension) or node (second dimension).
+- If the positive terminal of the ith voltage source is connected to node k, set the element (i,k) in the B matrix to 1.
+- If the negative terminal of the ith voltage source is connected to node k, set the element (i,k) in the B matrix to -1.
+- All other elements in the B matrix should be zero.
+
+Step 4: C Matrix Construction
+- Construct the C matrix, which is an m×n matrix that is the transpose of the B matrix.
+
+Step 5: D Matrix Construction
+- Construct the D matrix, which is an m×m matrix consisting only of zeros.
+
+Step 6: Assembling the A Matrix
+- Assemble the A matrix, an (n+m)x(n+m) matrix.
+- Divide the A matrix into four submatrices: G, B, C, and D.
+- Place the G matrix in the upper-left corner, the B matrix in the upper-right corner, the C matrix in the lower-left corner, and the D matrix in the lower-right corner of the A matrix.
+
+Your task is to create a linear algebra problem based on the matrix construction steps explained above. Place the final solution, consisting only of the matrix problem, between the <SOLUTION> tags.
+
+Remember not to simplify any phasor complex numbers if present and to leave them as is, without modification or conversion.
+
+<SOLUTION>
+...insert the linear algebra problem here...
+</SOLUTION>

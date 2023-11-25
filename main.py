@@ -12,8 +12,12 @@ parser.add_argument('--gpt-model', type=str, default="gpt-4-vision-preview",
                     help="GPT Model")
 parser.add_argument('--evaluator-model', type=str, default="gpt-3.5-turbo",
                     help="Evaluator Model")
+parser.add_argument('--updater-model', type=str, default="gpt-3.5-turbo",
+                    help="Updater Model")
 parser.add_argument('--train-test-split', type=float, default=0.2,
                     help="Percent of data to use for testing, rest is used for training(between 0.0 and 1.0)")
+parser.add_argument('--epoches', type=int, default=5,
+                    help="Total training epoches")
 args = parser.parse_args()
 
 # ----------------------------------------
@@ -28,9 +32,11 @@ learning_model = GPTModel(
     solution_version=args.version,
     gpt_model=args.gpt_model,
     evaluator_model=args.evaluator_model,
-    test_size=args.train_test_split
+    updater_model=args.updater_model,
+    test_size=args.train_test_split,
+    epoches=args.epoches
 )
-learning_model.log("loaded config and created LearningModel instance")
+learning_model.log("loaded config and created GPTModel instance")
 
 # ----------------------------------------
 #          Pre Processing

@@ -2,8 +2,9 @@ from typing import Optional, Dict, List, Any
 
 from openai import OpenAI
 
-from chat.chat_result import ChatResult
-from chat.evaluation_result import EvaluationResult
+from chat.result_object.chat_result import ChatResult
+from chat.result_object.evaluation_result import EvaluationResult
+from chat.result_object.reviewer_result import ReviewerResult
 from utils.gpt_utils import extract_content
 
 
@@ -88,6 +89,9 @@ class ChatAgent:
             "termination_reasons": termination_reasons
         }
 
+    def update_role(self, new_role):
+        self.role = new_role
+
 
 class EvaluatorAgent(ChatAgent):
     def rank_solution(self,
@@ -105,11 +109,39 @@ class EvaluatorAgent(ChatAgent):
 
         return EvaluationResult(
             input_prompt=evaluate_text,
-            score=extract_content("SCORE", response_text),
+            score=int(extract_content("SCORE", response_text)),
             issues=extract_content("ISSUES", response_text),
-            reasoning=extract_content("REASONING", response_text),
+            score_reasoning=extract_content("REASONING", response_text),
             final_matrices=extract_content("FINAL_MATRICES", response_text),
-            causes_of_error=extract_content("CAUSESOFERROR", response_text),
+            causes_of_errors=extract_content("CAUSESOFERROR", response_text),
             proposed_fixes=extract_content("PROPOSEDFIXES", response_text),
+            response=response
+        )
+
+
+class UpdaterAgent(ChatAgent):
+    def propose_new_prompt(self,
+                           gpt_prompt,
+                           score,
+                           score_reasoning,
+                           causes_of_errors,
+                           proposed_fixes,
+                           current_prompt) -> ReviewerResult:
+        evaluate_text = f"<SCORE>{score}</SCORE>\n" \
+                        f"<REASONING>{score_reasoning}</REASONING>\n" \
+                        f"<CAUSESOFERROR>{causes_of_errors}</CAUSESOFERROR>\n" \
+                        f"<PROPOSEDFIXES>{proposed_fixes}</PROPOSEDFIXES>\n" \
+                        f"<CURRENTPROMPT>{current_prompt}</CURRENTPROMPT>"
+        print(f"sending following to updater: {evaluate_text}")
+
+        response = self.get_response(text_prompt=evaluate_text)
+        response_text = response.response_str
+
+        print("response from reviewer:")
+        print(response_text)
+
+        return ReviewerResult(
+            input_prompt=evaluate_text,
+            new_prompt=extract_content("NEWPROMPT", response_text),
             response=response
         )

@@ -58,3 +58,11 @@ def join_json_string(inp) -> str:
         return '\n'.join(inp)
     else:
         return str(inp)
+
+
+def save_new_prompt(problem_name, version, new_prompt, epoch, training_example, start_time):
+    prompt_file_path = os.path.join(root, "Workspace", problem_name, version, "intermediate_prompts", str(start_time))
+    os.makedirs(prompt_file_path, exist_ok=True)
+    prompt_file_path = os.path.join(prompt_file_path, f"prompt_epoch{epoch}_example{training_example}.txt")
+    with open(prompt_file_path, 'w') as f:
+        f.writelines(new_prompt)
